@@ -38,7 +38,7 @@ def fabric(update, context):
     link = link.split(" ",1)[0]
 
     if link and "www.youtube.com" in link:
-      prompt = "yt \""
+      prompt = "yt --transcript \""
     else:
       prompt = " echo \""
 
