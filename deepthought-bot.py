@@ -1,26 +1,40 @@
-import subprocess
 import os
-from telegram.ext import Updater, CommandHandler, MessageHandler
+import logging
+import subprocess
+from telegram import Update
+from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 
 # Set the API token for your bot
 API_TOKEN = os.getenv('api_token')
 OLLAMA_SERVER = os.getenv('ollama_server')
 
-def start(update, context):
-    """Start command handler"""
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Hi! I'm a Fabric/oLLaMa bot")
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
-def help(update, context):
-    """Help command handler"""
-    context.bot.send_message(chat_id=update.effective_chat.id, text="/start - Start the conversation\n/help - Show this message\n/list - lists the Fabric patterns\n/fabric - /fabric summarize [link]/or reply to")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(
+       chat_id=update.effective_chat.id,
+       text="Hi! I'm a Fabric-oLLaMa bot"
+    )
 
-def list(update, context):
-    """List patterns handler"""
-    result = subprocess.run(["fabric", "--list"], stdout=subprocess.PIPE)
-    context.bot.send_message(chat_id=update.effective_chat.id, text=result.stdout.decode('utf-8'))
+async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(
+       chat_id=update.effective_chat.id, 
+       text="/start - Start the conversation\n/help - Show this message\n/list - lists the Fabric patterns\n/fabric - /fabric summarize [link]/or reply to"
+    )
 
-def fabric(update, context):
-    """Fabric command handler"""
+async def list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    result = subprocess.run(["fabric --list --remoteOllamaServer "+OLLAMA_SERVER],
+       shell=True, stdout=subprocess.PIPE
+    )
+    await context.bot.send_message(
+       chat_id=update.effective_chat.id,
+       text=result.stdout.decode('utf-8')
+    )
+
+async def fabric(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     reply = update.message.reply_to_message
     if text:
@@ -33,7 +47,9 @@ def fabric(update, context):
     elif args[2]:
       link = args[2]
     else:
-      context.bot.send_message(chat_id=update.effective_chat.id, text=result.stdout.decode('utf-8'))
+      await context.bot.send_message(
+         chat_id=update.effective_chat.id, text=result.stdout.decode('utf-8')
+      )
 
     link = "https"+link.split("https",1)[1]
     link = link.split(" ",1)[0]
@@ -43,29 +59,19 @@ def fabric(update, context):
     else:
       prompt = " echo \""
 
-    prompt = prompt + link + "\" | fabric --pattern " + command
+    prompt = prompt + link + "\" | fabric --remoteOllamaServer " + OLLAMA_SERVER + " --pattern " + command + " --model ollam3:latest
     result = subprocess.run([prompt], shell=True, stdout=subprocess.PIPE)
-    context.bot.send_message(chat_id=update.effective_chat.id, text=result.stdout.decode('utf-8'))
+    await context.bot.send_message(
+       chat_id=update.effective_chat.id, text=result.stdout.decode('utf-8')
+    )
 
-def main():
-    # Create the Updater and pass it your bot's token
-    updater = Updater(API_TOKEN, use_context=True)
-
-    # Get the dispatcher to register handlers
-    dp = updater.dispatcher
-
-    # Adding handlers
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("help", help))
-    dp.add_handler(CommandHandler("list", list))
-    dp.add_handler(CommandHandler("fabric", fabric))
-
-    # Start the bot
-    updater.start_polling()
-
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT
-    updater.idle()
 
 if __name__ == '__main__':
-    main()
+    application = ApplicationBuilder().token(API_TOKEN).build()
+
+    application.add_handler(CommandHandler('start', start))
+    application.add_handler(CommandHandler('help', help))
+    application.add_handler(CommandHandler('list', list))
+    application.add_handler(CommandHandler('fabric', fabric))
+
+    application.run_polling()
