@@ -59,7 +59,7 @@ async def fabric(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
       prompt = " echo \""
 
-    prompt = prompt + link + "\" | fabric --remoteOllamaServer " + OLLAMA_SERVER + " --pattern " + command + " --model ollam3:latest
+    prompt = prompt + link + "\" | fabric --remoteOllamaServer " + OLLAMA_SERVER + " --pattern " + command + " --model ollam3:latest"
     result = subprocess.run([prompt], shell=True, stdout=subprocess.PIPE)
     await context.bot.send_message(
        chat_id=update.effective_chat.id, text=result.stdout.decode('utf-8')
