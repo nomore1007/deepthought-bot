@@ -3,7 +3,8 @@ import os
 from telegram.ext import Updater, CommandHandler, MessageHandler
 
 # Set the API token for your bot
-API_TOKEN = "YOUR-API-TOKEN"
+API_TOKEN = os.getenv('api_token')
+OLLAMA_SERVER = os.getenv('ollama_server')
 
 def start(update, context):
     """Start command handler"""
