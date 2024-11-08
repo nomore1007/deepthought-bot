@@ -5,8 +5,8 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
 
 # Set the API token for your bot
-API_TOKEN = os.getenv('api_token')
-OLLAMA_SERVER = os.getenv('ollama_server')
+API_TOKEN = os.environ.get('api_token')
+OLLAMA_SERVER = os.environ.get('ollama_server')
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
