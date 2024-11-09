@@ -26,7 +26,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def list(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    result = subprocess.run(["fabric --list --remoteOllamaServer "+OLLAMA_SERVER],
+    result = subprocess.run("fabric --listmodels",
        shell=True, stdout=subprocess.PIPE
     )
     await context.bot.send_message(
@@ -34,7 +34,22 @@ async def list(update: Update, context: ContextTypes.DEFAULT_TYPE):
        text=result.stdout.decode('utf-8')
     )
 
+#raw fabric command
 async def fabric(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    reply = update.message.reply_to_message
+
+    if text:
+      args = text.split(" ",2)
+      prompt = "fabric " + args[1]
+      result = subprocess.run([prompt], shell=True, stdout=subprocess.PIPE)
+
+    await context.bot.send_message(
+       chat_id=update.effective_chat.id, text=result.stdout.decode('utf-8')
+    )
+
+#video command
+async def video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     reply = update.message.reply_to_message
     if text:
@@ -73,5 +88,6 @@ if __name__ == '__main__':
     application.add_handler(CommandHandler('help', help))
     application.add_handler(CommandHandler('list', list))
     application.add_handler(CommandHandler('fabric', fabric))
+    application.add_handler(CommandHandler('video', video))
 
     application.run_polling()
